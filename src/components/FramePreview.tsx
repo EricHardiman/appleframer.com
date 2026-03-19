@@ -183,7 +183,9 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
 
   useEffect(() => {
     if (!canvasRef.current || !imageUrl) return;
-    drawImageWithFrame();
+    void drawImageWithFrame().catch((error) => {
+      console.error('Error rendering frame preview:', error);
+    });
   }, [imageUrl, frame, drawImageWithFrame]);
 
 
