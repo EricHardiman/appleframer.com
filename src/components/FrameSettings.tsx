@@ -379,7 +379,7 @@ const FrameSettings = ({
             {/* Version Selection */}
             {selectedModel && versionsByModel.length > 0 && (
               <div>
-                <h4 className="font-medium mb-4 text-lg">Model</h4>
+                <h4 className="font-medium mb-4 text-lg">Version</h4>
                 <div className="grid grid-cols-2 gap-4">
                   {versionsByModel.map((version) => (
                     <button
@@ -400,7 +400,7 @@ const FrameSettings = ({
             {/* Variant Selection */}
             {variantsByVersion.length > 0 && (
               <div>
-                <h4 className="font-medium mb-4 text-lg">Orientation</h4>
+                <h4 className="font-medium mb-4 text-lg">Size</h4>
                 <div className="grid grid-cols-2 gap-4">
                   {variantsByVersion.map((variant) => (
                     <button

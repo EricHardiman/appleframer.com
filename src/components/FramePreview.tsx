@@ -26,15 +26,12 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
     });
   };
 
-  const drawImageWithFrame = useCallback(async () => {
-    const canvas = canvasRef.current;
+  const drawImageWithFrame = useCallback(async (targetCanvas?: HTMLCanvasElement) => {
+    const canvas = targetCanvas || canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    // Disable image smoothing to prevent bleeding in Safari
-    ctx.imageSmoothingEnabled = false;
 
     try {
       // Use the name directly from coordinates as it already includes orientation
@@ -61,6 +58,9 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
       canvas.width = frameImg.width;
       canvas.height = frameImg.height;
 
+      // Disable image smoothing after resize (setting width/height resets context state)
+      ctx.imageSmoothingEnabled = false;
+
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -69,12 +69,12 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
       const tempCtx = tempCanvas.getContext('2d');
       if (!tempCtx) return;
 
-      // Disable image smoothing to prevent bleeding in Safari
-      tempCtx.imageSmoothingEnabled = false;
-
       // Set temp canvas size to match the main canvas
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
+
+      // Disable image smoothing after resize (setting width/height resets context state)
+      tempCtx.imageSmoothingEnabled = false;
 
       // Calculate screenshot position based on frame coordinates
       const { x, y, screenshotWidth, screenshotHeight } = frame.coordinates;
@@ -102,12 +102,12 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
         const maskCtx = maskCanvas.getContext('2d');
         if (!maskCtx) return;
 
-        // Disable image smoothing to prevent bleeding in Safari
-        maskCtx.imageSmoothingEnabled = false;
-
         // Set mask canvas size to match the frame's specified dimensions (no inset)
         maskCanvas.width = adjustedWidth;
         maskCanvas.height = adjustedHeight;
+
+        // Disable image smoothing after resize (setting width/height resets context state)
+        maskCtx.imageSmoothingEnabled = false;
 
         // Draw mask at the right size
         maskCtx.drawImage(
@@ -184,7 +184,7 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
   }, [imageUrl, frame, drawImageWithFrame]);
 
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!canvasRef.current) return;
 
     // Create a temporary canvas for the download version
@@ -192,35 +192,16 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return;
 
-    // Store the original canvas reference
-    const originalCanvas = canvasRef.current;
+    // Draw to the temporary canvas and await completion
+    await drawImageWithFrame(tempCanvas);
 
-    // Create a new ref for the temporary canvas
-    const tempCanvasRef = { current: tempCanvas };
-    Object.defineProperty(canvasRef, 'current', {
-      configurable: true,
-      get() { return tempCanvasRef.current; }
-    });
-
-    // Draw with transparency for download
-    drawImageWithFrame();
-
-    // Wait for the image to be drawn
-    setTimeout(() => {
-      const link = document.createElement('a');
-      link.download = `framed-${image.name.replace(/\.[^/.]+$/, '')}.png`;
-      link.href = tempCanvas.toDataURL('image/png');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Restore the original canvas
-      Object.defineProperty(canvasRef, 'current', {
-        configurable: true,
-        get() { return originalCanvas; }
-      });
-      drawImageWithFrame();
-    }, 100);
+    // Download the rendered image
+    const link = document.createElement('a');
+    link.download = `framed-${image.name.replace(/\.[^/.]+$/, '')}.png`;
+    link.href = tempCanvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (

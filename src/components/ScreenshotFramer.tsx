@@ -158,10 +158,10 @@ const ScreenshotFramer = ({
       const tempCanvas = document.createElement("canvas");
       const tempCtx = tempCanvas.getContext("2d");
       if (!tempCtx) throw new Error("No temp canvas context");
-      // Disable image smoothing to prevent bleeding in Safari
-      tempCtx.imageSmoothingEnabled = false;
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
+      // Disable image smoothing after resize (setting width/height resets context state)
+      tempCtx.imageSmoothingEnabled = false;
       const { x, y, screenshotWidth, screenshotHeight } = frame.coordinates;
       const screenshotX = parseInt(x) * scale;
       const screenshotY = parseInt(y) * scale;
@@ -180,10 +180,10 @@ const ScreenshotFramer = ({
         const maskCanvas = document.createElement("canvas");
         const maskCtx = maskCanvas.getContext("2d");
         if (!maskCtx) throw new Error("No mask canvas context");
-        // Disable image smoothing to prevent bleeding in Safari
-        maskCtx.imageSmoothingEnabled = false;
         maskCanvas.width = adjustedWidth;
         maskCanvas.height = adjustedHeight;
+        // Disable image smoothing after resize (setting width/height resets context state)
+        maskCtx.imageSmoothingEnabled = false;
         maskCtx.drawImage(maskImg, 0, 0, maskCanvas.width, maskCanvas.height);
         const maskData = maskCtx.getImageData(
           0,

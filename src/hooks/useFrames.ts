@@ -107,8 +107,12 @@ function flattenFramesData(data: FramesData): DeviceFrame[] {
             } else {
               // Handle versions with variants or nested structures
               // Check if variants level contains colors (check BEFORE iterating)
-              const hasColorLevel = !('Portrait' in variants || 'Landscape' in variants) &&
-                Object.values(variants).some(val =>
+              // Colors are only used for iPhone devices (e.g., iPhone 17 Pro Max)
+              // iPad and Watch use this level for variants/sizes (e.g., iPad Pro 13/11)
+              const hasColorLevel =
+                category === 'iPhone' &&
+                !('Portrait' in variants || 'Landscape' in variants) &&
+                Object.values(variants).every(val =>
                   isRecord(val) && ('Portrait' in val || 'Landscape' in val)
                 );
 
