@@ -9,6 +9,7 @@ interface FramePreviewProps {
 
 const FramePreview = ({ image, frame }: FramePreviewProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const previewRenderSeqRef = useRef<number>(0);
   const [imageUrl, setImageUrl] = useState<string>('');
 
   useEffect(() => {
@@ -26,9 +27,14 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
     });
   };
 
-  const drawImageWithFrame = useCallback(async (targetCanvas?: HTMLCanvasElement) => {
+  const drawImageWithFrame = useCallback(async (targetCanvas?: HTMLCanvasElement, renderSeq?: number) => {
     const canvas = targetCanvas || canvasRef.current;
     if (!canvas) return;
+
+    // Ignore stale preview renders (latest request wins)
+    if (renderSeq !== undefined && renderSeq !== previewRenderSeqRef.current) {
+      return;
+    }
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -183,7 +189,8 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
 
   useEffect(() => {
     if (!canvasRef.current || !imageUrl) return;
-    void drawImageWithFrame().catch((error) => {
+    const renderSeq = ++previewRenderSeqRef.current;
+    void drawImageWithFrame(undefined, renderSeq).catch((error) => {
       console.error('Error rendering frame preview:', error);
     });
   }, [imageUrl, frame, drawImageWithFrame]);
