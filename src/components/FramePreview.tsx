@@ -52,12 +52,26 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
         loadImage(framePath)
       ]);
 
+      // Re-check staleness after async boundary
+      const isStalePreview =
+        !targetCanvas &&
+        renderSeq !== undefined &&
+        renderSeq !== previewRenderSeqRef.current;
+      if (isStalePreview) {
+        return;
+      }
+
       // Try to load mask if it exists
       let maskImg: HTMLImageElement | null = null;
       try {
         maskImg = await loadImage(maskPath);
       } catch {
         // Mask doesn't exist, continue without it
+      }
+
+      // Re-check staleness after async boundary
+      if (!targetCanvas && renderSeq !== undefined && renderSeq !== previewRenderSeqRef.current) {
+        return;
       }
 
       // Set canvas dimensions based on the frame image
