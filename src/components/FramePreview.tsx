@@ -175,6 +175,9 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
       );
     } catch (error) {
       console.error('Error loading images:', error);
+      throw error instanceof Error
+        ? error
+        : new Error('Failed to render framed image');
     }
   }, [imageUrl, frame]);
 
@@ -193,7 +196,11 @@ const FramePreview = ({ image, frame }: FramePreviewProps) => {
     if (!tempCtx) return;
 
     // Draw to the temporary canvas and await completion
-    await drawImageWithFrame(tempCanvas);
+    try {
+      await drawImageWithFrame(tempCanvas);
+    } catch {
+      return;
+    }
 
     // Download the rendered image
     const link = document.createElement('a');
